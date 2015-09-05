@@ -73,9 +73,6 @@ class Character
      fieldZero = new Cordinate(0,0);
    //if(fieldMax == null) //null is no border
    //  fieldMax = new Cordinate(400,800);
-
-   print(document.body.offset);
-   print(window.screen.width);
    if(moveToFrameMapping == null)
    {
      moveToFrameMapping = new Map<MOVE,int>();
