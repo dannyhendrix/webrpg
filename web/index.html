@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>webrpg</title>
+  <style>
+  body {background:#CCC;font-family: arial; font-size: 14px;}
+  
+  #webstore {background:url("webstore.png"); display:block; width:206px; height:58px;}
+  #dart {background:url("dart.png"); display:block; width:134px; height:58px;}
+  #teamx {background:url("teamx.png"); display:block; width:137px; height:37px;}
+  </style>
+</head>
+
+<body>
+<center>
+<h3>
+Hi!
+</h3>
+
+<h3 style="margin-top:100px">
+Use arrow keys to move around
+</h3>
+<img src="keys.png"/>
+<h3>
+Or, for mobile devices, tilt your device to walk (disable auto-rotation)
+</h3>
+<img src="tilt.png"/>
+
+<h3>
+Walk over links to select them
+</h3>
+<a href="http://www.google.com">Google</a>
+
+<h3>
+Hit enter to active the link
+</h3>
+
+<a style="position: relative;left: 200px;top: 80px;" id="teamx" href="http://www.dannyhendrix.com/teamx"></a>
+
+<a style="position: relative;right: 300px;top: 80px;" id="dart" href="http://www.dartlang.org"></a>
+
+<div style="margin-top:300px">
+<a href="https://github.com/dannyhendrix/webrpg"><img width="16" height="16" src="github.png"/>View source</a>
+</div>
+
+<a style="margin-top:50px;" id="webstore" href="https://chrome.google.com/webstore/detail/webrpg/inchdjcmcanbgkliakpooegokknmomki"></a>
+
+
+  <script type="application/dart" src="main.dart"></script>
+  <script data-pub-inline src="packages/browser/dart.js"></script>
+</center>
+</body>
+</html>
