@@ -1,93 +1,65 @@
 part of webrpg;
 
-class Character
+abstract class Character
 {
   DivElement el_character;
-  
-  List<String> _allowActive = ["A","INPUT","BUTTON","TEXTAREA"];
-  
-  Cordinate position;
-  //collision (or center) point of the character
-  Cordinate collision;
+
+  final List<String> _allowActive = ["a","input","button","textarea"];
+
+  final Position position;
+  //collision (or center) point of the character that is being used to determine the DOM elment that is below the character
+  final Position collision = new Position(1337,16);
   //dimension of 1 frame
-  Cordinate dimension;
+  final Dimensions dimension = new Position(32,32);
   //start position of the first frame in the image
-  Cordinate imgstart;
+  final Position imageStart = new Position(0,0);
   //animations info
-  Animation anim_walk, anim_default;
+  Animation animationDefault = const Animation(const [0]);
+  Animation animationWalk = const Animation(const [0]);
   
   //rectangular field in which the character can walk
-  Cordinate fieldZero, fieldMax;
-  
+  final Area border = new windowArea();
+
   //state
-  STATE state = STATE.DEFAULT;
-  MOVE currentmove = MOVE.DOWN;
+  CharacterState currentState = CharacterState.Default;
+  MoveDirection currentMove = MoveDirection.Down;
   //current animation and frame
-  Animation anim;
-  int anim_frame = 0;
+  Animation currentAnimation;
+  int animationFrame = 0;
   //ticks since last frame change
-  int imgtime = 0;
+  int imageTime = 0;
   //how many ticks before going to next frame in animation
-  int frametimer;
+  int frameTimer = 10;
   
   //element below the character
   Element el_hover = null;
   //element below the character that can be activated (_allowActive)
   Element el_active = null;
 
-  int walkspeed;
+  int stepSize = 6;
   //highlight style of elements when the character is placed over them
   String hoverStyle;
   String backupStyle;
   
   //map movement to the correct row of frames in the image.
   //i.e. if the top row is the character walking to the right; MOVE.RIGHT:0
-  Map<MOVE,int> moveToFrameMapping;
+  Map<MoveDirection,int> moveToFrameMapping = {MoveDirection.Up:0,MoveDirection.Left:1,MoveDirection.Down:2,MoveDirection.Right:3};
   
-  Character({
-    this.frametimer : 6, 
-    this.walkspeed : 1, 
-    String img : "images/character.png", 
-    this.hoverStyle : "outline:5px solid #DF8B30;",
-    this.position,
-    this.dimension,
-    this.collision,
-    this.imgstart,
-    this.fieldZero,
-    this.fieldMax,
-    this.anim_default : const Animation(const [0]),
-    this.anim_walk : const Animation(const [2,0,1,0]),
-    this.moveToFrameMapping
-      })
+  Character(this.position);
+
+  init()
   {
-    //My cordinates are not constants :/
-   if(position == null)
-      position = new Cordinate(0,0);
-   if(dimension == null)
-     dimension = new Cordinate(32,48);
-   if(collision == null)
-     collision = new Cordinate(16,40);
-   if(imgstart == null)
-      imgstart = new Cordinate(0,0);
-   if(fieldZero == null)
-     fieldZero = new Cordinate(0,0);
-   //if(fieldMax == null) //null is no border
-   //  fieldMax = new Cordinate(400,800);
-   if(moveToFrameMapping == null)
-   {
-     moveToFrameMapping = new Map<MOVE,int>();
-     int i = 0;
-     for(MOVE m in MOVE.values)
-       moveToFrameMapping[m] = i++;
-    }
-   
-    //set default animation
-    anim = anim_default;
-   
+    currentAnimation = animationDefault;
     //create DOM element
-    el_character = new DivElement();
-    el_character.setAttribute("style", 'background:url("$img"); z-index:100000; position:absolute; width:${dimension.x}px; height:${dimension.y}px;');
+    el_character = createCharacterElement();
     updateElementPosition();
+  }
+
+  Element createCharacterElement()
+  {
+    Element el = new DivElement();
+    el.className = "webrpg_character";
+    return el;
   }
   
   void setAsCurrentCharacter()
@@ -99,71 +71,55 @@ class Character
     el_character.style.zIndex = "100000";
   }
   
-  void checkBounds()
-  {
-    if(position.x < fieldZero.x)
-      position.x = fieldZero.x;
-    if(position.y < fieldZero.y)
-      position.y = fieldZero.y;
-    
-    if(fieldMax != null)
-    {
-      if(position.x > fieldMax.x)
-        position.x = fieldMax.x;
-      if(position.y > fieldMax.y)
-        position.y = fieldMax.y;
-    }
-  }
-  
   void updateElementPosition()
   {
     el_character.style.top = "${position.y-collision.y}px";
     el_character.style.left = "${position.x-collision.x}px";
-    
     scrollWindow();
   }
   
   void onUpdateNotMoving()
   {
-    _setImage(anim_default,currentmove);
+    _setImage(animationDefault,currentMove);
   }
   
-  void onUpdateMove(MOVE move)
+  void onUpdateMove(MoveDirection move)
   {
-    currentmove = move;
+    currentMove = move;
     Point bk = new Point(position.x,position.y);
     //update position
     switch(move)
     {
-      case MOVE.UP:
-        position.y -= walkspeed;
+      case MoveDirection.Up:
+        position.y -= stepSize;
         break;
-      case MOVE.DOWN:
-        position.y += walkspeed;
+      case MoveDirection.Down:
+        position.y += stepSize;
         break;
-      case MOVE.LEFT:
-        position.x -= walkspeed;
+      case MoveDirection.Left:
+        position.x -= stepSize;
         break;
-      case MOVE.RIGHT:
-        position.x += walkspeed;
+      case MoveDirection.Right:
+        position.x += stepSize;
         break;
     }
-    checkBounds();
+    if(border != null)
+      border.stayWithinArea(position);
     bool moved = bk.x != position.x || bk.y != position.y;
     
     if(!moved)
     {
-      _setImage(anim_default, move);
+      _setImage(animationDefault, move);
       return;
     }
     //change image frame
-    _setImage(anim_walk, move);
+    _setImage(animationWalk, move);
 
     //move div element
     updateElementPosition();
   }
   
-  void update(MOVE move)
+  void update(MoveDirection move)
   {
     if(move == null)
       onUpdateNotMoving();
@@ -179,27 +135,27 @@ class Character
     el_character.hidden = hide;
   }
   
-  void _setImage(Animation newanim, MOVE move)
+  void _setImage(Animation newanim, MoveDirection move)
   {
-    if(newanim != anim)
+    if(newanim != currentAnimation)
     {
-      anim = newanim;
-      anim_frame = 0;
+      currentAnimation = newanim;
+      animationFrame = 0;
     }
     else
     {
-      if(imgtime++ < frametimer)
+      if(imageTime++ < frameTimer)
         return;
-      anim_frame++;
+      animationFrame++;
       
-      if(anim_frame >= anim.frames.length)
-        anim_frame = 0;
+      if(animationFrame >= currentAnimation.frames.length)
+        animationFrame = 0;
     }
-    imgtime = 0;
+    imageTime = 0;
 
     int frameh = moveToFrameMapping[move];
     //set frame image
-    el_character.style.backgroundPosition = "-${imgstart.x+dimension.x*anim.frames[anim_frame]}px -${imgstart.y+dimension.y*frameh}px";
+    el_character.style.backgroundPosition = "-${imageStart.x+dimension.x*currentAnimation.frames[animationFrame]}px -${imageStart.y+dimension.y*frameh}px";
   }
   
   //hover element
@@ -226,7 +182,7 @@ class Character
       return;
     
     //find active element
-    while(el != null && _allowActive.indexOf(el.tagName) == -1)
+    while(el != null && !_allowActive.contains(el.tagName.toLowerCase()))
       el = el.parent;
     
     el_active = el;
@@ -275,5 +231,37 @@ class Character
       window.scroll(position.x+(dimension.x-collision.x)-window.innerWidth,window.pageYOffset);
     if(position.x-dimension.x-window.pageXOffset < 0)
       window.scroll(position.x-dimension.x,window.pageYOffset);
+  }
+}
+
+class CharacterWithImage extends Character
+{
+  final String imageSource;
+  @override
+  final Dimensions dimension;
+  @override
+  final Position collision;
+  @override
+  final Position imageStart = new Position(0,0);
+  @override
+  String hoverStyle = "outline:5px solid #DF8B30;";
+  @override
+  Animation animationDefault = const Animation(const [0,1,2]);
+  @override
+  Animation animationWalk = const Animation(const [3,4,5]);
+  @override
+  int stepSize = 2;
+  @override
+  int frameTimer = 6;
+
+  CharacterWithImage(Position position, this.imageSource, this.dimension, this.collision) : super(position);
+
+  @override
+  Element createCharacterElement()
+  {
+    Element el = new DivElement();
+    el.className = "webrpg_character";
+    el.setAttribute("style", 'background:url("$imageSource"); z-index:100000; position:absolute; width:${dimension.x}px; height:${dimension.y}px;');
+    return el;
   }
 }

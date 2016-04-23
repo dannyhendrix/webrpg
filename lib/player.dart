@@ -13,11 +13,11 @@ class Player
   OnNextCharacter nextCharacterListener;
   
   //holds keys that are currently being pressed
-  List<MOVE> keydown = new List();
+  List<MoveDirection> keydown = new List();
   
   Player(this.activationListener, this.nextCharacterListener);
   
-  MOVE getMove()
+  MoveDirection getMove()
   {
     if(keydown.isEmpty)
       return null;
@@ -33,15 +33,15 @@ class Player
     if((key == 9) && down) //tab
       return nextCharacterListener();
 
-    MOVE index = null;
+    MoveDirection index = null;
     if(key == 37)//left & a
-      index = MOVE.LEFT;
+      index = MoveDirection.Left;
     else if(key == 39)//right & d
-      index = MOVE.RIGHT;
+      index = MoveDirection.Right;
     else if(key == 38)//up & w
-      index = MOVE.UP;
+      index = MoveDirection.Up;
     else if(key == 40)//down & s
-      index = MOVE.DOWN;
+      index = MoveDirection.Down;
 
     if(index == null)
       return false;
@@ -53,7 +53,7 @@ class Player
   }
   
   //force movement
-  void setMove(MOVE m, [removeothers = true])
+  void setMove(MoveDirection m, [removeothers = true])
   {
     if(removeothers)
       keydown.clear();
